@@ -7,3 +7,10 @@ install:
 script:
     - tools/check_code.sh
     - pytest -v tests
+deploy:
+    provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    keep_history: true
+    on:
+        branch: master
