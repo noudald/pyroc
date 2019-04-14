@@ -7,4 +7,4 @@ install:
     - python setup.py install
 script:
     - tools/check_code.sh
-    - pytest -v tests
+    - pytest -v --cov=pyroc tests
