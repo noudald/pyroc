@@ -15,8 +15,8 @@ class ROC():
     """
     def __init__(self, ground_truth: Union[List[Union[int, float]], np.array],
                  estimates: Union[List[float], np.array]) -> None:
-        self.ground_truth = np.array(ground_truth)
-        self.estimates = np.array(estimates)
+        self.ground_truth = np.array(ground_truth).astype(np.int)
+        self.estimates = np.array(estimates).astype(np.float)
 
         self.tps = None
         self.fps = None
@@ -33,6 +33,15 @@ class ROC():
 
     def roc(self):
         """Compute ROC curve."""
+
+        if len(self.ground_truth) != len(self.estimates):
+            raise ValueError('Size of ground truth and estimates are not'
+                             ' equal.')
+
+        if len(self.ground_truth) < 2:
+            raise ValueError('Ground truth and estimates cannot have size zero'
+                             ' or one.')
+
         idx_sort = np.argsort(self.estimates)[::-1]
         self.ground_truth = self.ground_truth[idx_sort]
         self.estimates = self.estimates[idx_sort]
@@ -41,12 +50,14 @@ class ROC():
         fps = np.cumsum(np.max(self.ground_truth) - self.ground_truth)
 
         diff_values = np.append([0], np.where(np.diff(fps))[0] + 1)
-        tps = tps[diff_values]
-        fps = fps[diff_values]
+        self.tps = tps[diff_values]
+        self.fps = fps[diff_values]
 
         self.diff_values = diff_values
-        self.tps = tps / np.max(tps)
-        self.fps = fps / np.max(fps)
+        if not np.isclose(np.max(self.tps), 0.0):
+            self.tps = self.tps / np.max(self.tps)
+        if not np.isclose(np.max(self.fps), 0.0):
+            self.fps = self.fps / np.max(self.fps)
 
         return self.fps, self.tps, self.estimates[self.diff_values]
 
