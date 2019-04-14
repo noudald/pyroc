@@ -1,4 +1,9 @@
+import unittest
+
 import numpy as np
+
+from hypothesis import given
+from hypothesis import strategies as st
 
 from pyroc import ROC
 
@@ -20,3 +25,35 @@ class TestROCExample1():
         auc = self.roc.auc
 
         np.testing.assert_allclose(5/8, auc)
+
+def TestROCExample2():
+    def test_auc_all_gt_equal():
+        roc = ROC([0, 0, 0], [0, 0, 0])
+        assert np.isclose(roc.auc, 1.0)
+
+        roc = ROC([1, 1, 1], [1, 1, 1])
+        assert np.isclose(roc.auc, 1.0)
+
+    def test_auc_two_values():
+        roc = ROC([0, 1], [0, 1])
+        assert np.isclose(roc.auc, 1.0)
+
+        roc = ROC([0, 1], [1, 0])
+        assert np.isclose(roc.auc, 0.0)
+
+    def test_auc_three_values():
+        roc = ROC([False, True, False], [1.0, 0.0, 0.0])
+        assert np.isclose(roc.auc, 0.0)
+
+class TestROCExample3(unittest.TestCase):
+    @given(gt=st.lists(st.booleans()), est=st.lists(st.floats()))
+    def test_auc_hypothesis(self, gt, est):
+        if len(gt) != len(est):
+            with self.assertRaises(ValueError):
+                ROC(gt, est).roc()
+        elif len(gt) < 2:
+            with self.assertRaises(ValueError):
+                ROC(gt, est).roc()
+        else:
+            roc = ROC(gt, est)
+            assert roc.auc >= 0
