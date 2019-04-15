@@ -42,12 +42,27 @@ class ROC():
             raise ValueError('Ground truth and estimates cannot have size zero'
                              ' or one.')
 
+        if np.unique(self.ground_truth).shape[0] == 1:
+            min_th = np.min(self.estimates)
+            self.fps = np.array([0., 1.])
+            self.tps = np.array([1., 1.])
+            return self.fps, self.tps, np.array([min_th, min_th])
+
         idx_sort = np.argsort(self.estimates)[::-1]
         self.ground_truth = self.ground_truth[idx_sort]
         self.estimates = self.estimates[idx_sort]
 
+        if len(self.ground_truth) == 2:
+            self.fps = np.array([0., 1.])
+            if self.ground_truth[1] < self.ground_truth[0]:
+                self.tps = np.array([1., 1.])
+            else:
+                self.tps = np.array([0., 0.])
+            return self.fps, self.tps, self.estimates
+
         tps = np.cumsum(self.ground_truth)
         fps = np.cumsum(np.max(self.ground_truth) - self.ground_truth)
+
 
         diff_values = np.append([0], np.where(np.diff(fps))[0] + 1)
         self.tps = tps[diff_values]
