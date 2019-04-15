@@ -27,21 +27,21 @@ class TestROCExample1():
         np.testing.assert_allclose(5/8, auc)
 
 class TestROCExample2():
-    def test_auc_all_gt_equal():
+    def test_auc_all_gt_equal(self):
         roc = ROC([0, 0, 0], [0, 0, 0])
         assert np.isclose(roc.auc, 1.0)
 
         roc = ROC([1, 1, 1], [1, 1, 1])
         assert np.isclose(roc.auc, 1.0)
 
-    def test_auc_two_values():
+    def test_auc_two_values(self):
         roc = ROC([0, 1], [0, 1])
         assert np.isclose(roc.auc, 1.0)
 
         roc = ROC([0, 1], [1, 0])
         assert np.isclose(roc.auc, 0.0)
 
-    def test_auc_three_values():
+    def test_auc_three_values(self):
         roc = ROC([False, True, False], [1.0, 0.0, 0.0])
         assert np.isclose(roc.auc, 0.0)
 
