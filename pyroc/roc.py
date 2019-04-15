@@ -54,7 +54,7 @@ class ROC():
 
         if len(self.ground_truth) == 2:
             self.fps = np.array([0., 1.])
-            if self.estimates[1] < self.estimates[0]:
+            if self.ground_truth[1] < self.ground_truth[0]:
                 self.tps = np.array([1., 1.])
             else:
                 self.tps = np.array([0., 0.])
