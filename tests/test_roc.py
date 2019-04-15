@@ -26,7 +26,7 @@ class TestROCExample1():
 
         np.testing.assert_allclose(5/8, auc)
 
-def TestROCExample2():
+class TestROCExample2():
     def test_auc_all_gt_equal():
         roc = ROC([0, 0, 0], [0, 0, 0])
         assert np.isclose(roc.auc, 1.0)
