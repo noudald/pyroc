@@ -34,6 +34,9 @@ class ROC():
     def roc(self):
         """Compute ROC curve."""
 
+        if self.tps and self.fps and self.diff_values:
+            return self.fps, self.tps, self.estimates[self.diff_values]
+
         if len(self.ground_truth) != len(self.estimates):
             raise ValueError('Size of ground truth and estimates are not'
                              ' equal.')
