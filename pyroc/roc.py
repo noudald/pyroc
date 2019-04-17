@@ -1,6 +1,6 @@
 """PyROC - A Python library for computing ROC curves."""
 
-from typing import List, Union
+from typing import List, Optional, Union
 
 import numpy as np
 
@@ -76,6 +76,14 @@ class ROC():
 
         return self.fps, self.tps, self.estimates[self.diff_values]
 
+    def bootstrap(self, seed: Optional[int] = None):
+        """Perform bootstrap for this ROC curve."""
+        rng = np.random.RandomState(seed)
+        idx = np.arange(self.ground_truth.size)
+        bootstrap_idx = rng.choice(idx, size=idx.shape, replace=True)
+        bootstrap_ground_truth = self.ground_truth[bootstrap_idx]
+        bootstrap_estimates = self.estimates[bootstrap_idx]
+        return ROC(bootstrap_ground_truth, bootstrap_estimates)
 
     def plot(self):
         """Plot ROC curve."""
