@@ -53,10 +53,10 @@ class TestROCExample3(unittest.TestCase):
                 ROC(gt, est)
         elif len(gt) != len(est):
             with self.assertRaises(ValueError):
-                ROC(gt, est).roc()
+                ROC(gt, est)
         elif len(gt) < 2:
             with self.assertRaises(ValueError):
-                ROC(gt, est).roc()
+                ROC(gt, est)
         else:
             roc = ROC(gt, est)
             assert roc.auc >= 0

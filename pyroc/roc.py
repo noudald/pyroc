@@ -21,6 +21,14 @@ class ROC():
         if np.isnan(self.ground_truth).any() or np.isnan(self.estimates).any():
             raise ValueError('Ground truth or estimates contain NaN values')
 
+        if len(self.ground_truth) != len(self.estimates):
+            raise ValueError('Size of ground truth and estimates are not'
+                             ' equal.')
+
+        if len(self.ground_truth) < 2:
+            raise ValueError('Ground truth and estimates cannot have size zero'
+                             ' or one.')
+
         self.tps = None
         self.fps = None
         self.diff_values = None
@@ -40,14 +48,6 @@ class ROC():
         if self.tps is not None and self.fps is not None \
            and self.diff_values is not None:
             return self.fps, self.tps, self.estimates[self.diff_values]
-
-        if len(self.ground_truth) != len(self.estimates):
-            raise ValueError('Size of ground truth and estimates are not'
-                             ' equal.')
-
-        if len(self.ground_truth) < 2:
-            raise ValueError('Ground truth and estimates cannot have size zero'
-                             ' or one.')
 
         if np.unique(self.ground_truth).shape[0] == 1:
             min_arg = np.argmin(self.estimates)
