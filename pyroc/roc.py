@@ -1,6 +1,6 @@
 """PyROC - A Python library for computing ROC curves."""
 
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -23,7 +23,7 @@ class ROC():
         self.diff_values = None
 
     @property
-    def auc(self):
+    def auc(self) -> float:
         """Area Under the Curve."""
         try:
             return np.trapz(self.tps, x=self.fps)
@@ -31,7 +31,7 @@ class ROC():
             self.roc()
             return np.trapz(self.tps, x=self.fps)
 
-    def roc(self):
+    def roc(self) -> Tuple[np.array, np.array, np.array]:
         """Compute ROC curve."""
 
         if self.tps and self.fps and self.diff_values:
@@ -79,7 +79,7 @@ class ROC():
 
         return self.fps, self.tps, self.estimates[self.diff_values]
 
-    def bootstrap(self, seed: Optional[int] = None):
+    def bootstrap(self, seed: Optional[int] = None) -> 'ROC':
         """Perform bootstrap for this ROC curve."""
         rng = np.random.RandomState(seed)
         idx = np.arange(self.ground_truth.size)
@@ -88,6 +88,6 @@ class ROC():
         bootstrap_estimates = self.estimates[bootstrap_idx]
         return ROC(bootstrap_ground_truth, bootstrap_estimates)
 
-    def plot(self):
+    def plot(self) -> None:
         """Plot ROC curve."""
         raise NotImplementedError

@@ -9,15 +9,15 @@ import numpy as np
 from pyroc import ROC
 
 
-def bootstrap_roc_(args: Tuple[ROC, int]):
+def bootstrap_roc_(args: Tuple[ROC, int]) -> ROC:
     """Helper for bootstrapping ROC curve."""
-    roc, seed = args
-    bootstrap_roc = roc.bootstrap(seed)
-    bootstrap_roc.roc()
-    return bootstrap_roc
+    cur_roc, seed = args
+    bs_roc = cur_roc.bootstrap(seed)
+    bs_roc.roc()
+    return bs_roc
 
 
-def bootstrap_roc(roc: ROC,
+def bootstrap_roc(inp_roc: ROC,
                   num_bootstraps: int = 1000,
                   seed: Optional[int] = None,
                   n_jobs: int = -1) -> List[ROC]:
@@ -41,7 +41,7 @@ def bootstrap_roc(roc: ROC,
     seeds = rng.randint(2**32 - 1, size=(num_bootstraps))
 
     with mp.Pool(processes=n_jobs) as pool:
-        roc_list = pool.map(bootstrap_roc_, zip(len(seeds) * [roc], seeds))
+        roc_list = pool.map(bootstrap_roc_, zip(len(seeds) * [inp_roc], seeds))
 
     return roc_list
 
