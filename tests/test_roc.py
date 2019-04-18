@@ -57,3 +57,19 @@ class TestROCExample3(unittest.TestCase):
         else:
             roc = ROC(gt, est)
             assert roc.auc >= 0
+
+    @given(gt=st.lists(st.booleans()), est=st.lists(st.floats()))
+    def test_roc_ran_twice(self, gt, est):
+        if len(gt) == len(est) and len(gt) >= 2:
+            roc = ROC(gt, est)
+            fps, tps, thr = roc.roc()
+            assert np.isclose(roc.tps, tps).all()
+            assert np.isclose(roc.fps, fps).all()
+
+            # Replace input with nothing, so that it's unable to compute the
+            # ROC curve.
+            roc.ground_truth = None
+            new_fps, new_tps, new_thr = roc.roc()
+            assert np.isclose(new_fps, fps).all()
+            assert np.isclose(new_tps, tps).all()
+            assert np.isclose(new_thr, thr).all()

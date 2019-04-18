@@ -34,7 +34,8 @@ class ROC():
     def roc(self) -> Tuple[np.array, np.array, np.array]:
         """Compute ROC curve."""
 
-        if self.tps and self.fps and self.diff_values:
+        if self.tps is not None and self.fps is not None \
+           and self.diff_values is not None:
             return self.fps, self.tps, self.estimates[self.diff_values]
 
         if len(self.ground_truth) != len(self.estimates):
@@ -46,10 +47,11 @@ class ROC():
                              ' or one.')
 
         if np.unique(self.ground_truth).shape[0] == 1:
-            min_th = np.min(self.estimates)
+            min_arg = np.argmin(self.estimates)
             self.fps = np.array([0., 1.])
             self.tps = np.array([1., 1.])
-            return self.fps, self.tps, np.array([min_th, min_th])
+            self.diff_values = np.array([min_arg, min_arg])
+            return self.fps, self.tps, self.estimates[self.diff_values]
 
         idx_sort = np.argsort(self.estimates)[::-1]
         self.ground_truth = self.ground_truth[idx_sort]
@@ -57,6 +59,7 @@ class ROC():
 
         if len(self.ground_truth) == 2:
             self.fps = np.array([0., 1.])
+            self.diff_values = np.array([0, 1])
             if self.ground_truth[1] < self.ground_truth[0]:
                 self.tps = np.array([1., 1.])
             else:
