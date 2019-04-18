@@ -18,6 +18,9 @@ class ROC():
         self.ground_truth = np.array(ground_truth).astype(np.int)
         self.estimates = np.array(estimates).astype(np.float)
 
+        if np.isnan(self.ground_truth).any() or np.isnan(self.estimates).any():
+            raise ValueError('Ground truth or estimates contain NaN values')
+
         self.tps = None
         self.fps = None
         self.diff_values = None
