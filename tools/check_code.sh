@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PYTHONFILES=($(git ls-files | grep .py | grep -v tests/ | tr "\n" " "))
+PYTHONFILES=($(git ls-files | grep ".*\.py$" | grep -v tests/ | tr "\n" " "))
 
 echo "Check code script."
 echo -e "Checking files:\n${PYTHONFILES[@]}\n"
@@ -18,7 +18,7 @@ else
 fi
 
 echo "# Mypy tests"
-mypy --ignore-missing-imports --config-file=tools/mypy.conf ${PYTHONFILES[@]}
+mypy --config-file=tools/mypy.ini ${PYTHONFILES[@]}
 
 if [ $? -eq 0 ]; then
     echo -e "\nPassed"
