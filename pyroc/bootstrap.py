@@ -48,9 +48,9 @@ def bootstrap_roc(inp_roc: ROC,
 
 if __name__ == '__main__':
     # Simple example to test bootstrap
-    rng = np.random.RandomState(37)
+    ex_rng = np.random.RandomState(37)
     num = 10000
-    gt = rng.binomial(1, 0.5, num)
-    est = rng.rand((num))
-    roc = ROC(gt, est)
-    roc_list = bootstrap_roc(roc, seed=37)
+    ex_gt = ex_rng.binomial(1, 0.5, num)
+    ex_est = ex_rng.rand((num))
+    ex_roc = ROC(ex_gt, ex_est)
+    ex_roc_list = bootstrap_roc(ex_roc, seed=37)
