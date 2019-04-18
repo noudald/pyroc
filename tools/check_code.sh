@@ -14,17 +14,17 @@ if [ $? -eq 0 ]; then
     echo -e "Passed\n"
 else
     echo -e "Failed\n"
-    FAILURE=1
+    FAILURE=$((FAILURE+1))
 fi
 
 echo "# Mypy tests"
-mypy --ignore-missing-imports ${PYTHONFILES[@]}
+mypy --ignore-missing-imports --config-file=tools/mypy.conf ${PYTHONFILES[@]}
 
 if [ $? -eq 0 ]; then
-    echo "Passed"
+    echo -e "\nPassed"
 else
-    echo "Failed"
-    FAILURE=1
+    echo -e "\nFailed"
+    FAILURE=$((FAILURE+1))
 fi
 
 exit ${FAILURE}
