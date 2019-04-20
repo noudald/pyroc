@@ -109,6 +109,7 @@ class ROC():
              p_value: float = 0.05,
              mean_roc: bool = False,
              show_min_max: bool = False,
+             plot_roc_curve: bool = True,
              ax: plt.Axes = None) -> plt.Axes:
         """Plot ROC curve."""
 
@@ -156,7 +157,7 @@ class ROC():
                 raise RuntimeError(
                     'Cannot plot mean ROC curve without bootstrapping.')
             ax.plot(bsp.xrange, bsp.mean, color=color)
-        else:
+        elif plot_roc_curve:
             fps, tps, _ = self.roc()
             ax.plot(fps, tps, color=color)
 
