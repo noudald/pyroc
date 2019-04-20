@@ -2,6 +2,7 @@
 
 from typing import List, Optional, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -93,3 +94,21 @@ class ROC():
         bootstrap_ground_truth = self.ground_truth[bootstrap_idx]
         bootstrap_estimates = self.estimates[bootstrap_idx]
         return ROC(bootstrap_ground_truth, bootstrap_estimates)
+
+    def plot(self,
+             x_label: str = '1 - Specificity',
+             y_label: str = 'Sensitivity',
+             title: str = 'ROC Curve',
+             ax: plt.Axes = None) -> plt.Axes:
+        """Plot ROC curve."""
+        if not ax:
+            ax = plt.gca()
+
+        fps, tps, _ = self.roc()
+        ax.plot(fps, tps)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_title(title)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+        return ax
