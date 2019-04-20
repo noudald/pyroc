@@ -34,8 +34,13 @@ def bootstrap_roc(inp_roc: ROC,
         List of bootstrapped ROC curves.
 
     """
+    if num_bootstraps < 1:
+        raise ValueError('Non-positive bootstrap values are not allowed.')
+
     if n_jobs < 0:
         n_jobs = mp.cpu_count()
+    elif n_jobs == 0:
+        raise RuntimeError('Cannot initialize zero jobs.')
 
     rng = np.random.RandomState(seed)
     seeds = rng.randint(2**32 - 1, size=(num_bootstraps))
@@ -44,13 +49,3 @@ def bootstrap_roc(inp_roc: ROC,
         roc_list = pool.map(bootstrap_roc_, zip(len(seeds) * [inp_roc], seeds))
 
     return roc_list
-
-
-if __name__ == '__main__':
-    # Simple example to test bootstrap
-    ex_rng = np.random.RandomState(37)
-    num = 10000
-    ex_gt = ex_rng.binomial(1, 0.5, num)
-    ex_est = ex_rng.rand((num))
-    ex_roc = ROC(ex_gt, ex_est)
-    ex_roc_list = bootstrap_roc(ex_roc, seed=37)

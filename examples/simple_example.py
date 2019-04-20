@@ -3,10 +3,9 @@
 import pyroc
 
 if __name__ == '__main__':
-    GROUND_TRUTH = [0, 0, 1, 1, 1]
-    PREDICTIONS = [0.1, 0.3, 0.2, 0.3, 0.4]
+    ground_truth = [0, 0, 1, 1, 1]
+    predictions = [0.1, 0.3, 0.2, 0.3, 0.4]
 
-    ROC = pyroc.ROC(GROUND_TRUTH, PREDICTIONS)
+    roc = pyroc.ROC(ground_truth, predictions)
 
-    print(f'ROC AUC: {ROC.auc}')
-    ROC.plot()
+    print(f'ROC AUC: {roc.auc}')

@@ -93,7 +93,3 @@ class ROC():
         bootstrap_ground_truth = self.ground_truth[bootstrap_idx]
         bootstrap_estimates = self.estimates[bootstrap_idx]
         return ROC(bootstrap_ground_truth, bootstrap_estimates)
-
-    def plot(self) -> None:
-        """Plot ROC curve."""
-        raise NotImplementedError

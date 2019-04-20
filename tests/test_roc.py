@@ -59,7 +59,7 @@ class TestROCExample3(unittest.TestCase):
                 ROC(gt, est)
         else:
             roc = ROC(gt, est)
-            assert roc.auc >= 0
+            assert 1 >= roc.auc >= 0
 
     @given(gt=st.lists(st.booleans()), est=st.lists(st.floats()))
     def test_roc_ran_twice(self, gt, est):
