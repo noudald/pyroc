@@ -1,6 +1,6 @@
 """PyROC - A Python library for computing ROC curves."""
 
-from typing import List, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 
@@ -18,21 +18,8 @@ class ROC():
         self.ground_truth = np.array(ground_truth).astype(np.int)
         self.estimates = np.array(estimates).astype(np.float)
 
-        self.tps = None
-        self.fps = None
-        self.diff_values = None
-
-    @property
-    def auc(self):
-        """Area Under the Curve."""
-        try:
-            return np.trapz(self.tps, x=self.fps)
-        except IndexError:
-            self.roc()
-            return np.trapz(self.tps, x=self.fps)
-
-    def roc(self):
-        """Compute ROC curve."""
+        if np.isnan(self.ground_truth).any() or np.isnan(self.estimates).any():
+            raise ValueError('Ground truth or estimates contain NaN values')
 
         if len(self.ground_truth) != len(self.estimates):
             raise ValueError('Size of ground truth and estimates are not'
@@ -42,11 +29,32 @@ class ROC():
             raise ValueError('Ground truth and estimates cannot have size zero'
                              ' or one.')
 
+        self.tps = None
+        self.fps = None
+        self.diff_values = None
+
+    @property
+    def auc(self) -> float:
+        """Area Under the Curve."""
+        try:
+            return np.trapz(self.tps, x=self.fps)
+        except IndexError:
+            self.roc()
+            return np.trapz(self.tps, x=self.fps)
+
+    def roc(self) -> Tuple[np.array, np.array, np.array]:
+        """Compute ROC curve."""
+
+        if self.tps is not None and self.fps is not None \
+           and self.diff_values is not None:
+            return self.fps, self.tps, self.estimates[self.diff_values]
+
         if np.unique(self.ground_truth).shape[0] == 1:
-            min_th = np.min(self.estimates)
+            min_arg = np.argmin(self.estimates)
             self.fps = np.array([0., 1.])
             self.tps = np.array([1., 1.])
-            return self.fps, self.tps, np.array([min_th, min_th])
+            self.diff_values = np.array([min_arg, min_arg])
+            return self.fps, self.tps, self.estimates[self.diff_values]
 
         idx_sort = np.argsort(self.estimates)[::-1]
         self.ground_truth = self.ground_truth[idx_sort]
@@ -54,6 +62,7 @@ class ROC():
 
         if len(self.ground_truth) == 2:
             self.fps = np.array([0., 1.])
+            self.diff_values = np.array([0, 1])
             if self.ground_truth[1] < self.ground_truth[0]:
                 self.tps = np.array([1., 1.])
             else:
@@ -76,7 +85,11 @@ class ROC():
 
         return self.fps, self.tps, self.estimates[self.diff_values]
 
-
-    def plot(self):
-        """Plot ROC curve."""
-        raise NotImplementedError
+    def bootstrap(self, seed: Optional[int] = None) -> 'ROC':
+        """Perform bootstrap for this ROC curve."""
+        rng = np.random.RandomState(seed)
+        idx = np.arange(self.ground_truth.size)
+        bootstrap_idx = rng.choice(idx, size=idx.shape, replace=True)
+        bootstrap_ground_truth = self.ground_truth[bootstrap_idx]
+        bootstrap_estimates = self.estimates[bootstrap_idx]
+        return ROC(bootstrap_ground_truth, bootstrap_estimates)
