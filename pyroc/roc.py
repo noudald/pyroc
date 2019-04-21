@@ -6,7 +6,10 @@ from typing import List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-# from pyroc import bootstrap_roc
+
+BootstrapPlot = namedtuple('BootstrapPlot', ['xrange', 'min', 'max', 'mean',
+                                             'min_quantile', 'max_quantile'])
+
 
 class ROC():
     """Compute the ROC curve and the AUC of the curve.
@@ -97,6 +100,36 @@ class ROC():
         bootstrap_estimates = self.estimates[bootstrap_idx]
         return ROC(bootstrap_ground_truth, bootstrap_estimates)
 
+    def bootstrap_confidence(self,
+                             num_bootstraps: int = 1000,
+                             num_bootstrap_jobs: int = 1,
+                             show_min_max: bool = False,
+                             mean_roc: bool = False,
+                             p_value: float = 0.05,
+                             seed: Optional[int] = None) -> BootstrapPlot:
+        """Compute ROC curve confidence with boostrapping."""
+        # Import bootstrap_roc locally to avoid cross reference imports.
+        from pyroc import bootstrap_roc
+        bs_roc_list = bootstrap_roc(self, num_bootstraps=num_bootstraps,
+                                    seed=seed, n_jobs=num_bootstrap_jobs)
+
+        arange = np.arange(0, 1.01, 0.01)
+        interp_list = []
+        for cur_roc in bs_roc_list:
+            cur_fps, cur_tps, _ = cur_roc.roc()
+            interp_list.append(np.interp(arange, cur_fps, cur_tps))
+        interp_funcs = np.vstack(interp_list)
+
+
+        return BootstrapPlot(
+            xrange=arange,
+            min=np.min(interp_funcs, axis=0) if show_min_max else None,
+            max=np.max(interp_funcs, axis=0) if show_min_max else None,
+            mean=np.mean(interp_funcs, axis=0) if mean_roc else None,
+            min_quantile=np.quantile(interp_funcs, p_value / 2, axis=0),
+            max_quantile=np.quantile(interp_funcs, 1 - p_value / 2, axis=0)
+        )
+
     def plot(self,
              x_label: str = '1 - Specificity',
              y_label: str = 'Sensitivity',
@@ -112,38 +145,18 @@ class ROC():
              plot_roc_curve: bool = True,
              ax: plt.Axes = None) -> plt.Axes:
         """Plot ROC curve."""
-
-        # TODO: Clean up method, reformat code into smaller methods.
-        # pylint: disable=too-many-locals
-
         if not ax:
             ax = plt.gca()
 
         if bootstrap:
-            # Import bootstrap_roc locally to avoid cross reference imports.
-            from pyroc import bootstrap_roc
-            bs_roc_list = bootstrap_roc(self, num_bootstraps=num_bootstraps,
-                                        seed=seed, n_jobs=num_bootstrap_jobs)
+            bsp = self.bootstrap_confidence(
+                num_bootstraps=num_bootstraps,
+                seed=seed,
+                num_bootstrap_jobs=num_bootstrap_jobs,
+                show_min_max=show_min_max,
+                mean_roc=mean_roc,
+                p_value=p_value)
 
-            arange = np.arange(0, 1.01, 0.01)
-            interp_list = []
-            for cur_roc in bs_roc_list:
-                cur_fps, cur_tps, _ = cur_roc.roc()
-                interp_list.append(np.interp(arange, cur_fps, cur_tps))
-            interp_funcs = np.vstack(interp_list)
-
-            BootstrapPlot = namedtuple(
-                'BootstrapPlot',
-                ['xrange', 'min', 'max', 'mean', 'min_quantile', 'max_quantile'])
-
-            bsp = BootstrapPlot(
-                xrange=arange,
-                min=np.min(interp_funcs, axis=0) if show_min_max else None,
-                max=np.max(interp_funcs, axis=0) if show_min_max else None,
-                mean=np.mean(interp_funcs, axis=0) if mean_roc else None,
-                min_quantile=np.quantile(interp_funcs, p_value / 2, axis=0),
-                max_quantile=np.quantile(interp_funcs, 1 - p_value / 2, axis=0)
-            )
 
             ax.fill_between(bsp.xrange, bsp.min_quantile, bsp.max_quantile,
                             alpha=0.2, color=color)
