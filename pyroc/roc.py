@@ -108,6 +108,9 @@ class ROC():
                              p_value: float = 0.05,
                              seed: Optional[int] = None) -> BootstrapPlot:
         """Compute ROC curve confidence with boostrapping."""
+        if not 0 <= p_value < 1:
+            raise ValueError('P-value should be between 0 and 1.')
+
         # Import bootstrap_roc locally to avoid cross reference imports.
         from pyroc import bootstrap_roc
         bs_roc_list = bootstrap_roc(self, num_bootstraps=num_bootstraps,

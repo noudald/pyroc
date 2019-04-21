@@ -1,5 +1,7 @@
 import unittest
 
+from itertools import product
+
 import numpy as np
 
 from hypothesis import given
@@ -92,3 +94,105 @@ class TestROCExample3(unittest.TestCase):
                 bs_roc = roc.bootstrap(seed)
                 assert np.isin(bs_roc.ground_truth, roc.ground_truth).all()
                 assert np.isin(bs_roc.estimates, roc.estimates).all()
+
+class TestROCBootstrap(unittest.TestCase):
+    def setUp(self):
+        rng = np.random.RandomState(37)
+        num = 100
+        gt = rng.binomial(1, 0.5, num)
+        est = rng.rand((num))
+        self.roc = ROC(gt, est)
+
+    def test_bootstrap_confidence_default(self):
+        bsp = self.roc.bootstrap_confidence()
+
+        assert bsp.xrange.size == 101
+        assert not bsp.min
+        assert not bsp.max
+        assert not bsp.mean
+        assert bsp.min_quantile.size == 101
+        assert bsp.max_quantile.size == 101
+        assert (bsp.min_quantile <= bsp.max_quantile).all()
+
+    def test_bootstrap_confidence_num_bootstraps(self):
+        for num_bootstraps in [-1000, -10, -1, 0, 1, 10, 100, 1000]:
+            if num_bootstraps <= 0:
+                with self.assertRaises(ValueError):
+                    self.roc.bootstrap_confidence(num_bootstraps=num_bootstraps)
+            else:
+                bsp = self.roc.bootstrap_confidence(
+                    num_bootstraps=num_bootstraps)
+
+                assert bsp.xrange.size == 101
+                assert not bsp.min
+                assert not bsp.max
+                assert not bsp.mean
+                assert bsp.min_quantile.size == 101
+                assert bsp.max_quantile.size == 101
+                assert (bsp.min_quantile <= bsp.max_quantile).all()
+
+    def test_bootstrap_confidence_num_bootstrap_jobs(self):
+        for num_jobs_1, num_jobs_2 in product([-1, 1, 4], repeat=2):
+            bsp1 = self.roc.bootstrap_confidence(
+                num_bootstrap_jobs=num_jobs_1, seed=37)
+            bsp2 = self.roc.bootstrap_confidence(
+                num_bootstrap_jobs=num_jobs_2, seed=37)
+
+            assert np.isclose(bsp1.min_quantile, bsp2.min_quantile).all()
+            assert np.isclose(bsp1.max_quantile, bsp2.max_quantile).all()
+
+    def test_bootstrap_confidence_show_min_max(self):
+        bsp1 = self.roc.bootstrap_confidence(show_min_max=True, seed=37)
+
+        assert bsp1.xrange.size == 101
+        assert bsp1.min.size == 101
+        assert bsp1.max.size == 101
+        assert not bsp1.mean
+        assert bsp1.min_quantile.size == 101
+        assert bsp1.max_quantile.size == 101
+        assert (bsp1.min_quantile <= bsp1.max_quantile).all()
+
+        bsp2 = self.roc.bootstrap_confidence(show_min_max=False, seed=37)
+
+        assert not bsp2.min
+        assert not bsp2.max
+        assert np.isclose(bsp1.min_quantile, bsp2.min_quantile).all()
+        assert np.isclose(bsp1.max_quantile, bsp2.max_quantile).all()
+
+    def test_bootstrap_confidence_mean_roc(self):
+        bsp1 = self.roc.bootstrap_confidence(mean_roc=True, seed=37)
+
+        assert bsp1.xrange.size == 101
+        assert not bsp1.min
+        assert not bsp1.max
+        assert bsp1.mean.size == 101
+        assert bsp1.min_quantile.size == 101
+        assert bsp1.max_quantile.size == 101
+        assert (bsp1.min_quantile <= bsp1.max_quantile).all()
+
+        bsp2 = self.roc.bootstrap_confidence(mean_roc=False, seed=37)
+
+        assert not bsp2.mean
+        assert np.isclose(bsp1.min_quantile, bsp2.min_quantile).all()
+        assert np.isclose(bsp1.max_quantile, bsp2.max_quantile).all()
+
+        bsp3 = self.roc.bootstrap_confidence(
+            mean_roc=True, show_min_max=True, seed=37)
+
+        assert (bsp3.min <= bsp3.mean).all()
+        assert (bsp3.mean <= bsp3.max).all()
+
+    def test_bootstrap_confidence_p_value(self):
+        for p_value in [-1, -0.001, 1, 1.001, 10]:
+            with self.assertRaises(ValueError):
+                self.roc.bootstrap_confidence(p_value=p_value)
+
+        bsp1 = self.roc.bootstrap_confidence(p_value=.5, seed=37)
+        bsp2 = self.roc.bootstrap_confidence(p_value=.1, seed=37)
+        bsp3 = self.roc.bootstrap_confidence(p_value=0, seed=37)
+
+        assert (bsp3.min_quantile <= bsp2.min_quantile).all()
+        assert (bsp2.min_quantile <= bsp1.min_quantile).all()
+        assert (bsp1.min_quantile <= bsp1.max_quantile).all()
+        assert (bsp1.max_quantile <= bsp2.max_quantile).all()
+        assert (bsp2.max_quantile <= bsp3.max_quantile).all()
