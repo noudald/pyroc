@@ -196,3 +196,20 @@ class TestROCBootstrap(unittest.TestCase):
         assert (bsp1.min_quantile <= bsp1.max_quantile).all()
         assert (bsp1.max_quantile <= bsp2.max_quantile).all()
         assert (bsp2.max_quantile <= bsp3.max_quantile).all()
+
+    def test_plot_with_bootstrap(self):
+        """Could be tested better, any improvements are welcome."""
+        ax = self.roc.plot(bootstrap=True)
+        assert ax
+
+        ax = self.roc.plot(bootstrap=True, show_min_max=True)
+        assert ax
+
+        ax = self.roc.plot(bootstrap=True, mean_roc=True)
+        assert ax
+
+        with self.assertRaises(RuntimeError):
+            self.roc.plot(bootstrap=False, mean_roc=True)
+
+        ax = self.roc.plot(bootstrap=False)
+        assert ax
