@@ -1,8 +1,14 @@
 """PyROC - A Python library for computing ROC curves."""
 
+from collections import namedtuple
 from typing import List, Optional, Tuple, Union
 
+import matplotlib.pyplot as plt
 import numpy as np
+
+
+BootstrapPlot = namedtuple('BootstrapPlot', ['xrange', 'min', 'max', 'mean',
+                                             'min_quantile', 'max_quantile'])
 
 
 class ROC():
@@ -93,3 +99,89 @@ class ROC():
         bootstrap_ground_truth = self.ground_truth[bootstrap_idx]
         bootstrap_estimates = self.estimates[bootstrap_idx]
         return ROC(bootstrap_ground_truth, bootstrap_estimates)
+
+    def bootstrap_confidence(self,
+                             num_bootstraps: int = 1000,
+                             num_bootstrap_jobs: int = 1,
+                             show_min_max: bool = False,
+                             mean_roc: bool = False,
+                             p_value: float = 0.05,
+                             seed: Optional[int] = None) -> BootstrapPlot:
+        """Compute ROC curve confidence with boostrapping."""
+        if not 0 <= p_value < 1:
+            raise ValueError('P-value should be between 0 and 1.')
+
+        # Import bootstrap_roc locally to avoid cross reference imports.
+        from pyroc import bootstrap_roc
+        bs_roc_list = bootstrap_roc(self, num_bootstraps=num_bootstraps,
+                                    seed=seed, n_jobs=num_bootstrap_jobs)
+
+        arange = np.arange(0, 1.01, 0.01)
+        interp_list = []
+        for cur_roc in bs_roc_list:
+            cur_fps, cur_tps, _ = cur_roc.roc()
+            interp_list.append(np.interp(arange, cur_fps, cur_tps))
+        interp_funcs = np.vstack(interp_list)
+
+
+        return BootstrapPlot(
+            xrange=arange,
+            min=np.min(interp_funcs, axis=0) if show_min_max else None,
+            max=np.max(interp_funcs, axis=0) if show_min_max else None,
+            mean=np.mean(interp_funcs, axis=0) if mean_roc else None,
+            min_quantile=np.quantile(interp_funcs, p_value / 2, axis=0),
+            max_quantile=np.quantile(interp_funcs, 1 - p_value / 2, axis=0)
+        )
+
+    def plot(self,
+             x_label: str = '1 - Specificity',
+             y_label: str = 'Sensitivity',
+             title: str = 'ROC Curve',
+             color: str = 'blue',
+             bootstrap: bool = False,
+             num_bootstraps: int = 1000,
+             num_bootstrap_jobs: int = 1,
+             seed: Optional[int] = None,
+             p_value: float = 0.05,
+             mean_roc: bool = False,
+             show_min_max: bool = False,
+             plot_roc_curve: bool = True,
+             ax: plt.Axes = None) -> plt.Axes:
+        """Plot ROC curve."""
+        if not ax:
+            ax = plt.gca()
+
+        if bootstrap:
+            bsp = self.bootstrap_confidence(
+                num_bootstraps=num_bootstraps,
+                seed=seed,
+                num_bootstrap_jobs=num_bootstrap_jobs,
+                show_min_max=show_min_max,
+                mean_roc=mean_roc,
+                p_value=p_value)
+
+
+            ax.fill_between(bsp.xrange, bsp.min_quantile, bsp.max_quantile,
+                            alpha=0.2, color=color)
+            if show_min_max:
+                ax.fill_between(bsp.xrange, bsp.min, bsp.max, alpha=0.1,
+                                color=color)
+            ax.plot(bsp.xrange, bsp.min_quantile, color=color, alpha=0.3)
+            ax.plot(bsp.xrange, bsp.max_quantile, color=color, alpha=0.3)
+
+        if mean_roc:
+            if not bootstrap:
+                raise RuntimeError(
+                    'Cannot plot mean ROC curve without bootstrapping.')
+            ax.plot(bsp.xrange, bsp.mean, color=color)
+        elif plot_roc_curve:
+            fps, tps, _ = self.roc()
+            ax.plot(fps, tps, color=color)
+
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_title(title)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+
+        return ax

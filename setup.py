@@ -7,7 +7,7 @@ with open('README.md', 'r') as f:
 
 setuptools.setup(
     name='PyROC',
-    version='0.0.3',
+    version='0.0.4',
     author='Noud Aldenhoven',
     author_email='noud.aldenhoven@gmail.com',
     description='A Python library for generating ROC curves.',
