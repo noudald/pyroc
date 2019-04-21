@@ -2,12 +2,14 @@
 
 import setuptools
 
+from pyroc import __version__
+
 with open('README.md', 'r') as f:
     LONG_DESCRIPTION = f.read()
 
 setuptools.setup(
     name='PyROC',
-    version='0.0.4',
+    version=__version__,
     author='Noud Aldenhoven',
     author_email='noud.aldenhoven@gmail.com',
     description='A Python library for generating ROC curves.',
