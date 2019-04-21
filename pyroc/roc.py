@@ -164,7 +164,8 @@ class ROC():
             ax.fill_between(bsp.xrange, bsp.min_quantile, bsp.max_quantile,
                             alpha=0.2, color=color)
             if show_min_max:
-                ax.fill_between(bsp.xrange, bsp.min, bsp.max, alpha=0.1, color=color)
+                ax.fill_between(bsp.xrange, bsp.min, bsp.max, alpha=0.1,
+                                color=color)
             ax.plot(bsp.xrange, bsp.min_quantile, color=color, alpha=0.3)
             ax.plot(bsp.xrange, bsp.max_quantile, color=color, alpha=0.3)
 
