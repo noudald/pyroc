@@ -4,3 +4,4 @@ __version__ = '0.0.5'
 
 from .roc import ROC
 from .bootstrap import bootstrap_roc
+from .compare import compare_bootstrap
