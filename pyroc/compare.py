@@ -24,6 +24,4 @@ def compare_bootstrap(
 
     p_value = 1 - norm.cdf(sample)
 
-    if p_value < alt_hypothesis:
-        return True, p_value
-    return False, p_value
+    return p_value < alt_hypothesis, p_value

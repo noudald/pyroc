@@ -54,7 +54,7 @@ class ROC():
         return ((self.ground_truth == other.ground_truth).all()
                 and (self.estimates == other.estimates).all())
 
-    def __gt__(self, other: 'ROC') -> bool:
+    def __gt__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         # Import here to avoid cross reference imports
@@ -65,7 +65,9 @@ class ROC():
                                  seed=37,
                                  alt_hypothesis=comb_p_value)[0]
 
-    def __ge__(self, other: 'ROC') -> bool:
+    def __ge__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
         return other < self
 
     @property
