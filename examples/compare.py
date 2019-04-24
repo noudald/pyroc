@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from pyroc import ROC, compare_bootstrap
+from pyroc import ROC, compare_bootstrap, compare_binary
 
 # Simple example to test bootstrap
 ex_rng = np.random.RandomState(37)
@@ -15,6 +15,9 @@ ex_roc2 = ROC([True, True, True, False, False, False],
               [.9, .8, .35, .4, .3, .1])
 
 print(compare_bootstrap(ex_roc1, ex_roc2, seed=37))
+print(compare_binary(ex_roc1, ex_roc2, seed=37))
+print(compare_bootstrap(ex_roc1, ex_roc1, seed=37))
+print(compare_binary(ex_roc1, ex_roc1, seed=37))
 print(ex_roc1 < ex_roc2)
 print(ex_roc1 <= ex_roc2)
 print(ex_roc1 > ex_roc2)
