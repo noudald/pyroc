@@ -1,7 +1,7 @@
 """PyROC - A Python library for computing ROC curves."""
 
 from collections import namedtuple
-from typing import List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,12 +17,17 @@ class ROC():
     Args:
         ground_truth: Ground truth values.
         estimates: Estimates for the ground truth values.
+        stat_strength: Statistical strength, used when comparing to other ROC
+            curves.
 
     """
-    def __init__(self, ground_truth: Union[List[Union[int, float]], np.array],
-                 estimates: Union[List[float], np.array]) -> None:
+    def __init__(self,
+                 ground_truth: Union[List[Union[int, float]], np.array],
+                 estimates: Union[List[float], np.array],
+                 stat_strength: float = 0.05) -> None:
         self.ground_truth = np.array(ground_truth).astype(np.int)
         self.estimates = np.array(estimates).astype(np.float)
+        self.stat_strength = stat_strength
 
         if np.isnan(self.ground_truth).any() or np.isnan(self.estimates).any():
             raise ValueError('Ground truth or estimates contain NaN values')
@@ -38,6 +43,43 @@ class ROC():
         self.tps = None
         self.fps = None
         self.diff_values = None
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        if (self.ground_truth.size != other.ground_truth.size
+                or self.estimates.size != other.estimates.size):
+            return False
+        return ((self.ground_truth == other.ground_truth).all()
+                and (self.estimates == other.estimates).all())
+
+    def __gt__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        # Import here to avoid cross reference imports
+        from pyroc import compare_bootstrap
+        comb_p_value = min(self.stat_strength, other.stat_strength)
+        return compare_bootstrap(other, self, seed=37,
+                                 alt_hypothesis=comb_p_value)[0]
+
+    def __ge__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        return other < self
+
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        # Import here to avoid cross reference imports
+        from pyroc import compare_bootstrap
+        comb_p_value = min(self.stat_strength, other.stat_strength)
+        return compare_bootstrap(self, other, seed=37,
+                                 alt_hypothesis=comb_p_value)[0]
+
+    def __le__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        return self < other
 
     @property
     def auc(self) -> float:
