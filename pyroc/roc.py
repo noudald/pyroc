@@ -47,9 +47,8 @@ class ROC():
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
-        if self.ground_truth.size != other.ground_truth.size:
-            return False
-        if self.estimates.size != other.estimates.size:
+        if (self.ground_truth.size != other.ground_truth.size
+                or self.estimates.size != other.estimates.size):
             return False
         return ((self.ground_truth == other.ground_truth).all()
                 and (self.estimates == other.estimates).all())
@@ -60,15 +59,27 @@ class ROC():
         # Import here to avoid cross reference imports
         from pyroc import compare_bootstrap
         comb_p_value = min(self.stat_strength, other.stat_strength)
-        return compare_bootstrap(other,
-                                 self,
-                                 seed=37,
+        return compare_bootstrap(other, self, seed=37,
                                  alt_hypothesis=comb_p_value)[0]
 
     def __ge__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             raise NotImplementedError
         return other < self
+
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        # Import here to avoid cross reference imports
+        from pyroc import compare_bootstrap
+        comb_p_value = min(self.stat_strength, other.stat_strength)
+        return compare_bootstrap(self, other, seed=37,
+                                 alt_hypothesis=comb_p_value)[0]
+
+    def __le__(self, other: Any) -> bool:
+        if not isinstance(other, type(self)):
+            raise NotImplementedError
+        return self < other
 
     @property
     def auc(self) -> float:

@@ -213,3 +213,54 @@ class TestROCBootstrap(unittest.TestCase):
 
         ax = self.roc.plot(bootstrap=False)
         assert ax
+
+
+class TestROCCompare(unittest.TestCase):
+    def setUp(self):
+        rng = np.random.RandomState(37)
+        gt = rng.binomial(1, 0.5, 100)
+        est = rng.rand((100))
+
+        self.roc1 = ROC(gt, est)
+        self.roc2 = ROC([True, True, True, False, False, False],
+                        [.9, .8, .35, .4, .3, .1])
+        self.roc3 = ROC([True, True, True, False, False, False],
+                        [.9, .8, .35, .4, .3, .1], stat_strength=0.01)
+
+    def test_equal(self):
+        assert self.roc1 == self.roc1
+        assert self.roc2 == self.roc2
+        assert self.roc2 == self.roc3
+        assert not self.roc1 == self.roc2
+        assert not self.roc1 == self.roc3
+
+        with self.assertRaises(NotImplementedError):
+            self.roc1 == 10
+
+    def test_unequal(self):
+        assert self.roc1 < self.roc2
+        assert not (self.roc1 > self.roc2)
+        assert self.roc2 > self.roc1
+        assert not (self.roc2 < self.roc1)
+        assert self.roc1 <= self.roc2
+        assert not (self.roc1 >= self.roc2)
+        assert self.roc2 >= self.roc1
+        assert not (self.roc2 <= self.roc1)
+
+        # ROC1 is not smaller than ROC3, because of the statistical strength.
+        assert not (self.roc1 < self.roc3)
+        assert not (self.roc3 > self.roc3)
+        assert not (self.roc1 <= self.roc3)
+        assert not (self.roc3 >= self.roc3)
+
+        with self.assertRaises(NotImplementedError):
+            self.roc1 > 10
+
+        with self.assertRaises(NotImplementedError):
+            self.roc1 >= 10
+
+        with self.assertRaises(NotImplementedError):
+            self.roc1 < 10
+
+        with self.assertRaises(NotImplementedError):
+            self.roc1 <= 10
