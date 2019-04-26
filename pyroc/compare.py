@@ -30,3 +30,22 @@ def compare_bootstrap(
     p_value = 1 - norm.cdf(sample)
 
     return p_value < alt_hypothesis, p_value
+
+def compare_binary(
+        roc1: ROC,
+        roc2: ROC,
+        alt_hypothesis: float = 0.05,
+        seed: Optional[int] = None) -> Tuple[bool, float]:
+    """Compute roc1 < roc2 with binary comparison using bootstrapping."""
+    if not 0 <= alt_hypothesis <= 1:
+        raise ValueError('Alternative hypothesis must be between 0 and 1.')
+
+    bootstrap_auc1 = np.array(list(roc.auc
+                                   for roc in bootstrap_roc(roc1, seed=seed)))
+    bootstrap_auc2 = np.array(list(roc.auc
+                                   for roc in bootstrap_roc(roc2, seed=seed)))
+
+    aucs = bootstrap_auc2 - bootstrap_auc1
+    p_value = sum(aucs <= 0) / aucs.size
+
+    return p_value < alt_hypothesis, p_value
