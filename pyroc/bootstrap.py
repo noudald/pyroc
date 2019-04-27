@@ -10,7 +10,20 @@ from pyroc import ROC
 
 
 def bootstrap_roc_(args: Tuple[ROC, int]) -> ROC:
-    """Helper for bootstrapping ROC curve."""
+    """Helper method which applies bootstrapping on a given ROC curve.
+
+    Parameters
+    ----------
+    args
+        Tuple containing of an ROC object and a seed for applying
+        bootstrapping.
+
+    Returns
+    -------
+    bs_roc
+        A bootstrapped ROC using the input ROC and the given seed.
+
+    """
     cur_roc, seed = args
     bs_roc = cur_roc.bootstrap(seed)
     bs_roc.roc()
@@ -21,17 +34,33 @@ def bootstrap_roc(inp_roc: ROC,
                   num_bootstraps: int = 1000,
                   seed: Optional[int] = None,
                   n_jobs: int = -1) -> List[ROC]:
-    """Bootstrap ROC curve.
+    """Bootstrap ROC curve using the DeLong method with concurrency support.
 
-    Args:
-        roc: ROC cruve object to bootstrap.
-        num_bootstraps: Number of bootstraps to apply.
-        seed: Random seed for selecting bootstraps.
-        n_jobs: Number of jobs to use for computing bootstraps. If n_jobs is
-            set to -1 all available cpu threads will be used.
+    Parameters
+    ----------
+    roc
+        ROC curve object on which we apply the DeLong bootstrapping method.
+    num_bootstraps
+        Number of bootstraps to apply on the ROC curve. The number of ROC
+        curves returned by this method is equal to num_bootstraps.
+    seed
+        Seed used for bootstrapping the ROC curve. If no seed is set the seed
+        will be set randomly, generating non-deterministic output.
+    n_jobs
+        Number of jobs used to compute the bootstraps for the ROC curve in
+        parallel. If n_jobs is set negative all available cpu threads will be
+        used.
 
-    Returns:
-        List of bootstrapped ROC curves.
+    Raises
+    ------
+    ValueError
+        If num_bootstraps is not positive.
+    RuntimeError
+        If n_jobs is set to zero.
+
+    Returns
+    -------
+    List of bootstrapped ROC curves.
 
     """
     if num_bootstraps < 1:

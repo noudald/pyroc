@@ -12,18 +12,30 @@ BootstrapPlot = namedtuple('BootstrapPlot', ['xrange', 'min', 'max', 'mean',
 
 
 class ROC():
-    """Compute the ROC curve and the AUC of the curve.
+    """ROC curve object.
 
-    Args:
-        ground_truth: Ground truth values.
-        estimates: Estimates for the ground truth values.
-        stat_strength: Statistical strength, used when comparing to other ROC
-            curves.
+    Parameters
+    ----------
+    ground_truth
+        List or Numpy array of ground truth values for the ROC curve. Can be
+        either integers, floats, or booleans.
+    estimates
+        List of Numpy array of Estimates corresponding to the ground truth
+        values. Can be either integers, floats, or booleans.
+    stat_strength
+        Statistical strength, used when comparing to other ROC curves.
+
+    Raises
+    ------
+    ValueError
+        Ground truth or estimates contain NaN values.
+        Size of ground truth and estimates don't correspond.
+        Ground truth and estimates are empty lists.
 
     """
     def __init__(self,
-                 ground_truth: Union[List[Union[int, float]], np.array],
-                 estimates: Union[List[float], np.array],
+                 ground_truth: Union[List[Union[int, float, bool]], np.array],
+                 estimates: Union[List[Union[int, float, bool]], np.array],
                  stat_strength: float = 0.05) -> None:
         self.ground_truth = np.array(ground_truth).astype(np.int)
         self.estimates = np.array(estimates).astype(np.float)
@@ -83,7 +95,13 @@ class ROC():
 
     @property
     def auc(self) -> float:
-        """Area Under the Curve."""
+        """Area Under the Curve (AUC) of the ROC curve.
+
+        Returns
+        -------
+        Area under the curve for this ROC curve.
+
+        """
         try:
             return np.trapz(self.tps, x=self.fps)
         except IndexError:
@@ -91,7 +109,20 @@ class ROC():
             return np.trapz(self.tps, x=self.fps)
 
     def roc(self) -> Tuple[np.array, np.array, np.array]:
-        """Compute ROC curve."""
+        """Compute ROC curve false positive rate, true positive rate, and
+        thresholds.
+
+        Returns
+        -------
+        fps
+            A Numpy array of the false positive rate.
+        tps
+            A Numpy array of the true positive rate.
+        thresholds
+            A Numpy array for the thresholds for the false and true positive
+            rate taken from the ground truth.
+
+        """
 
         if self.tps is not None and self.fps is not None \
            and self.diff_values is not None:
@@ -134,7 +165,21 @@ class ROC():
         return self.fps, self.tps, self.estimates[self.diff_values]
 
     def bootstrap(self, seed: Optional[int] = None) -> 'ROC':
-        """Perform bootstrap for this ROC curve."""
+        """Compute a bootstrapped ROC curve from this ROC curve.
+
+        Parameters
+        ----------
+        seed
+            Seed used for bootstrapping the ROC curve. If seed is set to None
+            a random seed will be chosen, which will lead to non-deterministic
+            results.
+
+        Returns
+        -------
+        ROC
+            The bootstrapped ROC curve from this ROC curve.
+
+        """
         rng = np.random.RandomState(seed)
         idx = np.arange(self.ground_truth.size)
         bootstrap_idx = rng.choice(idx, size=idx.shape, replace=True)
@@ -149,7 +194,47 @@ class ROC():
                              mean_roc: bool = False,
                              p_value: float = 0.05,
                              seed: Optional[int] = None) -> BootstrapPlot:
-        """Compute ROC curve confidence with boostrapping."""
+        """Compute ROC curve confidence with bootstrapping.
+
+        Parameters
+        ----------
+        num_bootstraps
+            Number of bootstraps to apply on the ROC curve. The number of ROC
+            curves returned by this method is equal to num_bootstraps.
+        num_bootstrap_jobs
+            Number of jobs used to compute the bootstraps for the ROC curve in
+            parallel. If n_jobs is set negative all available cpu threads will
+            be used.
+        show_min_max
+            If set to True this method will return the minimum and maximum
+            values obtained during bootstrapping.
+        mean_roc
+            If set to True all bootstrapped ROC curves are used to create an
+            averaged ROC curve. Usually this ROC curve looks more smooth than
+            the original ROC curve, and therefore can be used for smoothing the
+            original ROC curve.
+        p_value
+            Value between 0 and 1. This value shows the confidence area of the
+            ROC curve.
+        seed
+            Seed used for bootstrapping the ROC curve. If seed is set to None
+            a random seed will be chosen, which will lead to non-deterministic
+            results.
+
+        Returns
+        -------
+        BootstrapPlot
+            A named tuple containing: `xrange`, the false positive rate;
+            `min_quantile`, the smallest true positive rate values within the
+            given confidence; `max_quantile`, the largest true positive rate
+            values within the given confidence; `mean`, if mean_roc is set, the
+            averaged true positive values over the bootstrapped ROC curves;
+            `min`, if show_min_max is set, the smallest true positive rate
+            values over the bootstrapped ROC curves; `max`, if show_min_max is
+            set, the largest true positive rate values of the bootstrapped ROC
+            curves.
+
+        """
         if not 0 <= p_value < 1:
             raise ValueError('P-value should be between 0 and 1.')
 
@@ -189,7 +274,66 @@ class ROC():
              show_min_max: bool = False,
              plot_roc_curve: bool = True,
              ax: plt.Axes = None) -> plt.Axes:
-        """Plot ROC curve."""
+        """Plot ROC curve.
+
+        Parameters
+        ----------
+        x_label
+            Label for x-axis in ROC curve plot.
+        y_label
+            Label for y-axis in ROC curve plot.
+        title
+            Title for ROC curve plot.
+        color
+            Color of the ROC curve and the confidence interval, if required.
+        bootstrap
+            If set to True the ROC curve will be plotted with a confidence
+            interval using bootstrapping.
+        num_bootstraps
+            Number of bootstraps to apply on the ROC curve. The larger the
+            value the more accurate the confidence interval. But larger values
+            for num_bootstrap will lead to longer computation time and memory
+            usage.
+        num_bootstrap_jobs
+            Number of jobs used to compute the bootstraps for the ROC curve in
+            parallel. If n_jobs is set negative all available cpu threads will
+            be used.
+        seed
+            Seed used for bootstrapping the ROC curve. If no seed is set the
+            seed will be set randomly, generating non-deterministic output.
+        p_value
+            Value between 0 and 1. This value shows the confidence area of the
+            ROC curve.
+        mean_roc
+            If set to True all bootstrapped ROC curves are used to create an
+            averaged ROC curve. Usually this ROC curve looks more smooth than
+            the original ROC curve, and therefore can be used for smoothing the
+            original ROC curve.
+        show_min_max
+            If set to True the ROC curve will be plotted with the smallest and
+            largest true positive rate values obtained from bootstrapping. This
+            parameter is mainly used for debug purposes.
+        plot_roc_curve
+            If set to False the ROC curve will not be plotted. But the
+            confidence interval, obtained with bootstrapping, and averaged ROC
+            curve will be plotted. This option could be usefull for plotting
+            the average ROC curve without the original ROC curve.
+        ax
+            If ax is given the ROC plot will be plotted into this Matplotlib
+            axis.
+
+        Raises
+        ------
+        RuntimeError
+            If mean_roc is set to True, but bootstrap is set to False.
+
+        Returns
+        -------
+        ax
+            Matplotlib axis plot with the ROC curve plot, optionally with
+            confidence interval.
+
+        """
         if not ax:
             ax = plt.gca()
 
