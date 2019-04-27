@@ -1,6 +1,6 @@
 """PyROC - A Python library for computing ROC curves."""
 
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 
 from .roc import ROC
 from .bootstrap import bootstrap_roc
