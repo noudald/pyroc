@@ -264,6 +264,7 @@ class ROC():
              x_label: str = '1 - Specificity',
              y_label: str = 'Sensitivity',
              title: str = 'ROC Curve',
+             label: Optional[str] = None,
              color: str = 'blue',
              bootstrap: bool = False,
              num_bootstraps: int = 1000,
@@ -284,6 +285,8 @@ class ROC():
             Label for y-axis in ROC curve plot.
         title
             Title for ROC curve plot.
+        label
+            If set, this will be the label displayed in the legend.
         color
             Color of the ROC curve and the confidence interval, if required.
         bootstrap
@@ -359,10 +362,16 @@ class ROC():
             if not bootstrap:
                 raise RuntimeError(
                     'Cannot plot mean ROC curve without bootstrapping.')
-            ax.plot(bsp.xrange, bsp.mean, color=color)
+            if label:
+                ax.plot(bsp.xrange, bsp.mean, label=label, color=color)
+            else:
+                ax.plot(bsp.xrange, bsp.mean, color=color)
         elif plot_roc_curve:
             fps, tps, _ = self.roc()
-            ax.plot(fps, tps, color=color)
+            if label:
+                ax.plot(fps, tps, label=label, color=color)
+            else:
+                ax.plot(fps, tps, color=color)
 
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
