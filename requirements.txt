@@ -1,7 +1,6 @@
 attrs>=17.4.0
 matplotlib==3.0.3
 numpy==1.16.2
-scipy==1.2.1
 
 mypy==0.700
 mypy-extensions==0.4.1

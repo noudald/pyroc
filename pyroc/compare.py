@@ -1,12 +1,26 @@
 """Tools for comparing ROC curves with AUC."""
 
+from math import erf
 from typing import Optional, Tuple
 
 import numpy as np
 
-from scipy.stats import norm
-
 from pyroc import bootstrap_roc, ROC
+
+
+def gaussian_cdf(x: float) -> float:
+    """Gaussian cummulative distribution function for N(0, 1).
+
+    Parameters
+    ----------
+    x
+        Quantile for which to compute the cummulative distribution.
+
+    Returns
+    -------
+    Cummulative distribution for quantile x for Gaussian distribution N(0, 1).
+    """
+    return (1.0 + erf(x / 2.0**.5)) / 2.0
 
 def compare_bootstrap(
         roc1: ROC,
@@ -27,7 +41,7 @@ def compare_bootstrap(
     if np.std(aucs) > 0:
         sample /= np.std(aucs)
 
-    p_value = 1 - norm.cdf(sample)
+    p_value = 1 - gaussian_cdf(sample)
 
     return p_value < alt_hypothesis, p_value
 
