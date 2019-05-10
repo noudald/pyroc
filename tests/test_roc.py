@@ -205,7 +205,13 @@ class TestROCBootstrap(unittest.TestCase):
         ax = self.roc.plot(bootstrap=True, show_min_max=True)
         assert ax
 
+        ax = self.roc.plot(bootstrap=True, show_min_max=True, label='test')
+        assert ax
+
         ax = self.roc.plot(bootstrap=True, mean_roc=True)
+        assert ax
+
+        ax = self.roc.plot(bootstrap=True, mean_roc=True, label='test')
         assert ax
 
         with self.assertRaises(RuntimeError):
