@@ -14,7 +14,7 @@ some basic examples on how to use PyROC.
 To install PyROC from source you need to install the requirements for PyROC
 first. In the `pyroc` directory execute:
 ```
-pip install -r requirements.
+pip install -r requirements.txt
 ```
 To install PyROC run in the `pyroc` directory:
 ```
