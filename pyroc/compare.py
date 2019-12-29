@@ -105,8 +105,8 @@ def compare_binary(
         aucs_diff = [auc11 - auc21, auc12 - auc22, ..., auc1n - auc2n],
 
     where auc1i is the AUC of ith bootstrap of roc1, and auc2i is the AUC of
-    the ith bootstrap of roc2. We define the statistical strength, i.e.
-    p-value, for which we can reject the zero hypothesis roc1 > roc2 as
+    the ith bootstrap of roc2. We define the p-value, for which we can reject
+    the zero hypothesis roc1 > roc2 as
 
         p_value = sum(aucs_diff > 0) / n.
 

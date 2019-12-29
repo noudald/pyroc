@@ -22,8 +22,8 @@ class ROC():
     estimates
         List of Numpy array of Estimates corresponding to the ground truth
         values. Can be either integers, floats, or booleans.
-    stat_strength
-        Statistical strength, used when comparing to other ROC curves.
+    p_value
+        P-value used when comparing to other ROC curves.
 
     Raises
     ------
@@ -36,10 +36,10 @@ class ROC():
     def __init__(self,
                  ground_truth: Union[List[Union[int, float, bool]], np.array],
                  estimates: Union[List[Union[int, float, bool]], np.array],
-                 stat_strength: float = 0.05) -> None:
+                 p_value: float = 0.05) -> None:
         self.ground_truth = np.array(ground_truth).astype(np.int)
         self.estimates = np.array(estimates).astype(np.float)
-        self.stat_strength = stat_strength
+        self.p_value = p_value
 
         if np.isnan(self.ground_truth).any() or np.isnan(self.estimates).any():
             raise ValueError('Ground truth or estimates contain NaN values')
@@ -51,6 +51,9 @@ class ROC():
         if len(self.ground_truth) < 2:
             raise ValueError('Ground truth and estimates cannot have size zero'
                              ' or one.')
+
+        if not 0.0 <= self.p_value <= 1.0:
+            raise ValueError('P-value should be between 0 and 1.')
 
         self.tps = None
         self.fps = None
@@ -70,7 +73,7 @@ class ROC():
             raise NotImplementedError
         # Import here to avoid cross reference imports
         from pyroc import compare_bootstrap
-        comb_p_value = min(self.stat_strength, other.stat_strength)
+        comb_p_value = min(self.p_value, other.p_value)
         return compare_bootstrap(other, self, seed=37,
                                  alt_hypothesis=comb_p_value)[0]
 
@@ -84,7 +87,7 @@ class ROC():
             raise NotImplementedError
         # Import here to avoid cross reference imports
         from pyroc import compare_bootstrap
-        comb_p_value = min(self.stat_strength, other.stat_strength)
+        comb_p_value = min(self.p_value, other.p_value)
         return compare_bootstrap(self, other, seed=37,
                                  alt_hypothesis=comb_p_value)[0]
 
