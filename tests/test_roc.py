@@ -95,6 +95,18 @@ class TestROCExample3(unittest.TestCase):
                 assert np.isin(bs_roc.ground_truth, roc.ground_truth).all()
                 assert np.isin(bs_roc.estimates, roc.estimates).all()
 
+class TestROC(unittest.TestCase):
+    def setUp(self):
+        rng = np.random.RandomState(37)
+        num = 100
+        self.gt = rng.binomial(1, 0.5, num)
+        self.est = rng.rand((num))
+
+    def test_init(self):
+        for p_value in [-1, -0.001, 1, 1.001, 10]:
+            with self.assertRaises(ValueError):
+                ROC(self.gt, self.est, p_value=p_value)
+
 class TestROCBootstrap(unittest.TestCase):
     def setUp(self):
         rng = np.random.RandomState(37)

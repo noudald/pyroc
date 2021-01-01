@@ -52,7 +52,7 @@ class ROC():
             raise ValueError('Ground truth and estimates cannot have size zero'
                              ' or one.')
 
-        if not 0.0 <= self.p_value <= 1.0:
+        if not 0.0 < self.p_value < 1.0:
             raise ValueError('P-value should be between 0 and 1.')
 
         self.tps = None
