@@ -95,6 +95,18 @@ class TestROCExample3(unittest.TestCase):
                 assert np.isin(bs_roc.ground_truth, roc.ground_truth).all()
                 assert np.isin(bs_roc.estimates, roc.estimates).all()
 
+class TestROC(unittest.TestCase):
+    def setUp(self):
+        rng = np.random.RandomState(37)
+        num = 100
+        self.gt = rng.binomial(1, 0.5, num)
+        self.est = rng.rand((num))
+
+    def test_init(self):
+        for p_value in [-1, -0.001, 1, 1.001, 10]:
+            with self.assertRaises(ValueError):
+                ROC(self.gt, self.est, p_value=p_value)
+
 class TestROCBootstrap(unittest.TestCase):
     def setUp(self):
         rng = np.random.RandomState(37)
@@ -231,7 +243,7 @@ class TestROCCompare(unittest.TestCase):
         self.roc2 = ROC([True, True, True, False, False, False],
                         [.9, .8, .35, .4, .3, .1])
         self.roc3 = ROC([True, True, True, False, False, False],
-                        [.9, .8, .35, .4, .3, .1], stat_strength=0.01)
+                        [.9, .8, .35, .4, .3, .1], p_value=0.01)
 
     def test_equal(self):
         assert self.roc1 == self.roc1
@@ -253,7 +265,7 @@ class TestROCCompare(unittest.TestCase):
         assert self.roc2 >= self.roc1
         assert not (self.roc2 <= self.roc1)
 
-        # ROC1 is not smaller than ROC3, because of the statistical strength.
+        # ROC1 is not smaller than ROC3, because of the p-value of 0.01.
         assert not (self.roc1 < self.roc3)
         assert not (self.roc3 > self.roc3)
         assert not (self.roc1 <= self.roc3)
