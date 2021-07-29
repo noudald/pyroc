@@ -231,7 +231,8 @@ class TestROCCompare(unittest.TestCase):
         self.roc2 = ROC([True, True, True, False, False, False],
                         [.9, .8, .35, .4, .3, .1])
         self.roc3 = ROC([True, True, True, False, False, False],
-                        [.9, .8, .35, .4, .3, .1], stat_strength=0.01)
+                        [.9, .8, .35, .4, .3, .1],
+                        statistical_power=0.99)
 
     def test_equal(self):
         assert self.roc1 == self.roc1
@@ -253,7 +254,7 @@ class TestROCCompare(unittest.TestCase):
         assert self.roc2 >= self.roc1
         assert not (self.roc2 <= self.roc1)
 
-        # ROC1 is not smaller than ROC3, because of the statistical strength.
+        # ROC1 is not smaller than ROC3, because of the statistical power.
         assert not (self.roc1 < self.roc3)
         assert not (self.roc3 > self.roc3)
         assert not (self.roc1 <= self.roc3)
